@@ -20,7 +20,7 @@
 # 安装
 
 ```
-git clone 
+git clone https://github.com/teamssix/src_notice.git
 cd src_notice
 pip3 install -r requirements.txt
 python3 src_notice.py
