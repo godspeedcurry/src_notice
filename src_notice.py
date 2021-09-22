@@ -3,7 +3,7 @@ import json
 import time
 import requests
 from bs4 import BeautifulSoup
-
+from requests_html import HTMLSession
 
 def print_color(notice_time, title):
     grep_list = ['活动', '周岁', '周年', '双倍', '三倍', '端午', '七夕', '双11安全保卫战']
@@ -270,9 +270,14 @@ def immomo(number):
     print('\n\033[0;33m-----------------------陌陌SRC------------------------\033[0m')
     url = 'https://security.immomo.com/blog'
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36'}
-    r = requests.get(url, headers=headers)
-    bs = BeautifulSoup(r.text, 'html.parser')
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36'
+    }
+    # 动态渲染
+    session = HTMLSession()
+    r = session.get(url,headers=headers)
+    r.html.render()
+
+    bs = BeautifulSoup(r.html.html, 'html.parser')
     notice_list = bs.select('.blog-list')[0].select('span')
     if number > len(notice_list):
         number = len(notice_list)
@@ -284,7 +289,7 @@ def immomo(number):
 
 def oppo(number):
     print('\n\033[0;33m-----------------------OPPO SRC-----------------------\033[0m')
-    url = 'https://security.oppo.com/cn/be/cn/FEnotice/findAllNotice'
+    url = 'https://security.oppo.com/cn/be/cn/osrc/FEnotice/findAllNotice'
     headers = {
         'Host': 'security.oppo.com',
         'Content-Type': 'application/json;charset=UTF-8',
@@ -292,9 +297,10 @@ def oppo(number):
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36'}
     r = requests.post(url, headers=headers, data='{"pageNum":1,"pageSize":10}')
     r_json = json.loads(r.text)
-    notice_list = r_json['AllNotice']['list']
+    notice_list = r_json['data']['list']
     if number > len(notice_list):
         number = len(notice_list)
+    print(number)
     for i in range(0, number):
         time = notice_list[i]['notice_online_time']
         title = notice_list[i]['notice_name']
@@ -451,21 +457,29 @@ def zto(number):
         title = notice_list[i]['title']
         print_color(time, title)
 
+def find_div_module_cell(tag):
+    if tag.name != "div":
+        return False
+    if not tag.has_attr("class"):
+        return False
+    if "index-module--feed_cell" in "\n".join(tag.attrs["class"]):
+        return True
+    return False
 
 def bytedance(number):
     print('\n\033[0;33m-----------------------字节跳动SRC---------------------\033[0m')
-    url = 'https://security.bytedance.com/notice/getNotices/'
+    url = 'https://security.bytedance.com/techs'
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36'}
     r = requests.get(url, headers=headers)
     bs = BeautifulSoup(r.text, 'html.parser')
-    notice_list = bs.select('.container')[0].select('li')
-    if number > len(notice_list):
-        number = len(notice_list)
+    notice_list = bs.find_all(find_div_module_cell)
+    number = min(number, len(notice_list))
     for i in range(0, number):
-        time = notice_list[i].select('span')[0].text
-        title = notice_list[i].select('a')[0].text
-        print_color(time, title)
+        mytime = notice_list[i].select('span')[0].text
+        title = notice_list[i].select('h3')[0].text
+        
+        print_color(mytime, title)
 
 
 if __name__ == '__main__':
