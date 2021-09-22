@@ -300,7 +300,6 @@ def oppo(number):
     notice_list = r_json['data']['list']
     if number > len(notice_list):
         number = len(notice_list)
-    print(number)
     for i in range(0, number):
         time = notice_list[i]['notice_online_time']
         title = notice_list[i]['notice_name']
